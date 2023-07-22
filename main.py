@@ -1,5 +1,4 @@
 from aiogram.utils import executor
-
 from handlers import start, weather
 from create_bot import dp
 

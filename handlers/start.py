@@ -1,6 +1,6 @@
 from aiogram import types, Dispatcher
 from create_bot import bot
-from keyboards.client_keyboards import key_board
+from keyboards.start_keyboard import key_board
 
 
 async def start_command(message: types.Message):
