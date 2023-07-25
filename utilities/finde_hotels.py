@@ -1,6 +1,6 @@
 from create_bot import hotel_key
+from utilities.hotel_photo import get_hotel_photo
 import requests
-import json
 
 
 async def create_hotels_dict(city_id, checkin_date, checkout_date):
