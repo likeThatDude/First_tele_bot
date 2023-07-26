@@ -77,16 +77,17 @@ async def find_hotels(callback: types.CallbackQuery):
                                                dic_with_user_answers['dates'][0],
                                                dic_with_user_answers['dates'][1])
         await callback.message.answer('Вот ваши отели')
-        for hotel in hotels_list[:3]:
-            photo = await get_hotel_photo(hotel['id'])
+        for hotel in hotels_list:
+            photo = await get_hotel_photo(hotel['hotel_id'])
             media_group = [types.InputMediaPhoto(url) for url in photo]
             await callback.message.answer_media_group(media_group)
-            await callback.message.answer(f'{hotel["name"]}'
-                                          f'\nОценка: {hotel["reviewScore"]} - {hotel["reviewScoreWord"]}'
-                                          f'\nЗаезд: c {hotel["checkin"]["untilTime"]} '
-                                          f'по {hotel["checkin"]["fromTime"]}'
-                                          f'\nВыезд: с {hotel["checkout"]["fromTime"]} '
-                                          f'по {hotel["checkout"]["untilTime"]}')
+            await callback.message.answer(f'{hotel["hotel_name"]}'
+                                          f'\nОценка: {hotel["review_score"]} - {hotel["review_score_word"]}'
+                                          f'\nЗаезд: c {hotel["checkin"]["until"]} '
+                                          f'по {hotel["checkin"]["from"]}'
+                                          f'\nВыезд: с {hotel["checkout"]["from"]} '
+                                          f'по {hotel["checkout"]["until"]}'
+                                          f'\nСсылка: {hotel["url"]}', disable_web_page_preview=True)
     await FSMHotels.next()
 
 

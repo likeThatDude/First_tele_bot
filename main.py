@@ -10,4 +10,5 @@ start.register_handler_start(dp)
 weather.register_handler_weather(dp)
 hotels.register_handler_hotels(dp)
 
-executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
