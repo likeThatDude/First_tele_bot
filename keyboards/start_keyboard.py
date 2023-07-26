@@ -1,6 +1,6 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-button_one = KeyboardButton('/Подобрать отель')
+button_one = KeyboardButton('/Отель')
 button_two = KeyboardButton('/Посмотреть кафе и рестораны')
 button_three = KeyboardButton('/Погода')
 button_four = KeyboardButton('Поделиться контактом ☎️', request_contact=True)  # второй аргумент - передать телефон

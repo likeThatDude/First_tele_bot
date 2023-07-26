@@ -5,8 +5,8 @@ import json
 import datetime
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from keyboards.weather_buttom import location_button
-from geopy import Nominatim
+from keyboards.location_button import location_button
+from utilities.find_location.find_city import user_location
 
 
 class FSMWeather(StatesGroup):
@@ -46,14 +46,8 @@ async def get_weather(message: types.Message, state: FSMContext):
     """
     current_date_time = datetime.datetime.now()
     formatted_date_time = current_date_time.strftime('%d/%m/%Y %H:%M:%S')
-    if message.location:
-        city_name = await get_city_name(message['location']['latitude'], message['location']['longitude'])
-        if city_name is None:
-            await bot.send_message(message.from_user.id, 'Извините, я не смог найти ваш город.'
-                                                         '\nПопробуйте прислать геолокацию ещё раз '
-                                                         '\nили напишите город вручную')
-    else:
-        city_name = message.text.strip().lower()
+    city_name = await user_location(message)
+
     all_data = requests.get(
         f'https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={weather_key}&units=metric&lang=ru')
 
@@ -69,27 +63,6 @@ async def get_weather(message: types.Message, state: FSMContext):
         await state.finish()
     else:
         await bot.send_message(message.from_user.id, 'Ошибка ввода города. Пожалуйста, попробуйте еще раз.')
-
-
-async def get_city_name(latitude, longitude):
-    """
-    Функция для получения названия города по переданным координатам геолокации.
-
-    Входные параметры:
-    - latitude: широта геолокации.
-    - longitude: долгота геолокации.
-
-    Выходные параметры:
-    - city: название города, если удалось определить, иначе None.
-    """
-    geolocator = Nominatim(user_agent="geoapiExercises")
-    location = geolocator.reverse((latitude, longitude), language="ru")
-
-    if location and location.raw.get("address"):
-        city = location.raw["address"].get("city")
-        if city:
-            return city
-    return None
 
 
 def register_handler_weather(dp: Dispatcher):
