@@ -6,7 +6,7 @@ import datetime
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from keyboards.location_button import location_button
-from utilities.find_city import user_location
+from utilities.find_location.find_city import user_location
 
 
 class FSMWeather(StatesGroup):

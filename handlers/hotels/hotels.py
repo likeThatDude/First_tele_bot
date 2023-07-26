@@ -6,11 +6,11 @@ from aiogram.dispatcher import FSMContext
 from keyboards.location_button import location_button
 from keyboards.cities_button import cities_button_generator
 from keyboards.yes_no_checker import yes_no_checker
-from utilities.find_city import user_location
-from utilities.find_destination import get_dic_with_cities
-from utilities.check_date import check_user_date
-from utilities.finde_hotels import create_hotels_dict
-from utilities.hotel_photo import get_hotel_photo
+from utilities.find_location.find_city import user_location
+from utilities.hotel.find_destination import get_dic_with_cities
+from utilities.hotel.check_date import check_user_date
+from utilities.hotel.finde_hotels import create_hotels_dict
+from utilities.hotel.hotel_photo import get_hotel_photo
 
 dic_with_cities = {}
 dic_with_user_answers = {}
@@ -45,6 +45,7 @@ async def city_to_search(message: types.Message):
 
 
 async def get_city_id(callback: types.CallbackQuery):
+    await callback.answer()
     callback_user_data = callback.data[2:]
     current_city = dic_with_cities[callback_user_data]
     dic_with_user_answers['city'] = current_city['dest_id']
@@ -68,7 +69,8 @@ async def arrival_dates(message: types.Message):
         await FSMHotels.next()
 
 
-async def find_hotels(callback: types.CallbackQuery):
+async def find_hotels(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
     if callback.data == '//да':
         await callback.message.answer('Введите пожалуйста новые даты.')
         await FSMHotels.get_dates.set()
@@ -76,8 +78,8 @@ async def find_hotels(callback: types.CallbackQuery):
         hotels_list = await create_hotels_dict(dic_with_user_answers['city'],
                                                dic_with_user_answers['dates'][0],
                                                dic_with_user_answers['dates'][1])
-        await callback.message.answer('Вот ваши отели')
-        for hotel in hotels_list:
+        await callback.message.answer('Отели которые я нашёл: ')
+        for hotel in hotels_list[:5]:
             photo = await get_hotel_photo(hotel['hotel_id'])
             media_group = [types.InputMediaPhoto(url) for url in photo]
             await callback.message.answer_media_group(media_group)
@@ -88,7 +90,7 @@ async def find_hotels(callback: types.CallbackQuery):
                                           f'\nВыезд: с {hotel["checkout"]["from"]} '
                                           f'по {hotel["checkout"]["until"]}'
                                           f'\nСсылка: {hotel["url"]}', disable_web_page_preview=True)
-    await FSMHotels.next()
+    await state.finish()
 
 
 def register_handler_hotels(dp: Dispatcher):

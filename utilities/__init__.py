@@ -1,4 +1,2 @@
-from . import find_city
-from . import find_destination
-from . import finde_hotels
-from . import hotel_photo
+from .find_location import find_city
+from .hotel import find_destination, finde_hotels, hotel_photo
