@@ -46,6 +46,7 @@ async def get_city_name(latitude, longitude):
 
     if location and location.raw.get("address"):
         city = location.raw["address"].get("city")
+        print(city)
         if city:
             return city
     return None

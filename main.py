@@ -1,5 +1,7 @@
 from aiogram.utils import executor
-from handlers import start, weather, hotels
+from handlers import start
+from handlers.weather import weather
+from handlers.hotels import hotels
 from create_bot import dp
 
 

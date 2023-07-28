@@ -1,5 +1,5 @@
 from create_bot import hotel_key
-import requests
+import aiohttp
 
 
 async def get_hotel_photo(hotel_id):
@@ -13,8 +13,9 @@ async def get_hotel_photo(hotel_id):
     }
 
     photo_list = []
-    response = requests.get(url, headers=headers, params=querystring)
-    response = response.json()
-    for i in response[:5]:
-        photo_list.append(i['url_max'])
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers, params=querystring) as response:
+            response_data = await response.json()
+            for i in response_data[:5]:
+                photo_list.append(i['url_max'])
     return photo_list
