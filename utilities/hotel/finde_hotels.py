@@ -15,6 +15,7 @@ async def create_hotels_dict(city_id, checkin_date, checkout_date, rating, hotel
             Если False, отели будут отсортированы по возрастанию оценки.
         hotels_count (int): Количество отелей с оценками, которые нужно получить.
         order_by (str): Синхронен с rating, если rating is True то выводит отели с большим количеством звёзд и наоборот
+            В данном случает BookingAPI выводит и отели без звёзд.
         adults_number (int, optional): Количество взрослых, проживающих в номере. По умолчанию 1.
 
     Возвращает:

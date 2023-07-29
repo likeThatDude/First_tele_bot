@@ -1,4 +1,3 @@
-import aiogram.utils.exceptions
 import asyncio
 from create_bot import bot
 from aiogram import types, Dispatcher
@@ -93,7 +92,6 @@ async def sort_hotels(callback: types.CallbackQuery):
     await callback.answer()
     rating_keyboard = await rating_button()
     dic_with_user_answers['count'] = int(callback.data[2:])
-    print(dic_with_user_answers['count'])
     await callback.message.answer('Как вывести отели ?:'
                                   '\nНачать с высокого рейтинга'
                                   '\nНачать с низкого рейтинга', reply_markup=rating_keyboard)
@@ -126,31 +124,19 @@ async def find_hotels(callback: types.CallbackQuery, state: FSMContext):
                 photo = await get_hotel_photo(hotel['hotel_id'])
                 media_group = [types.InputMediaPhoto(url) for url in photo]
                 await callback.message.answer_media_group(media_group)
-                try:
-                    await callback.message.answer(f'{hotel["hotel_name"]}'
-                                                  f'\nОценка: {hotel["review_score"]} - {hotel["review_score_word"]}'
-                                                  f'\nКоличество звёзд: {round(hotel["class"], 0)}'
-                                                  f'\nЗаезд: c {hotel["checkin"]["until"]} '
-                                                  f'по {hotel["checkin"]["from"]}'
-                                                  f'\nВыезд: с {hotel["checkout"]["from"]} '
-                                                  f'по {hotel["checkout"]["until"]}'
-                                                  f'\nСсылка: {hotel["url"]}', disable_web_page_preview=True)
-                except aiogram.utils.exceptions.RetryAfter as error:
-                    delay_seconds = error.timeout
-                    await asyncio.sleep(delay_seconds)
-                    await callback.message.answer(f'{hotel["hotel_name"]}'
-                                                  f'\nОценка: {hotel["review_score"]} - {hotel["review_score_word"]}'
-                                                  f'\nКоличество звёзд: {round(hotel["class"], 0)}'
-                                                  f'\nЗаезд: c {hotel["checkin"]["until"]} '
-                                                  f'по {hotel["checkin"]["from"]}'
-                                                  f'\nВыезд: с {hotel["checkout"]["from"]} '
-                                                  f'по {hotel["checkout"]["until"]}'
-                                                  f'\nСсылка: {hotel["url"]}', disable_web_page_preview=True)
+                await callback.message.answer(f'{hotel["hotel_name"]}'
+                                              f'\nОценка: {hotel["review_score"]} - {hotel["review_score_word"]}'
+                                              f'\nКоличество звёзд: {round(hotel["class"], 0)}'
+                                              f'\nЗаезд: c {hotel["checkin"]["until"]} '
+                                              f'по {hotel["checkin"]["from"]}'
+                                              f'\nВыезд: с {hotel["checkout"]["from"]} '
+                                              f'по {hotel["checkout"]["until"]}'
+                                              f'\nСсылка: {hotel["url"]}', disable_web_page_preview=True)
+                await asyncio.sleep(1.0)
 
-            await state.finish()
-            await callback.message.answer('Выберите пожалуйста один из пунктов меню, для продолжения',
-                                          reply_markup=start_keyboard)
-
+        await state.finish()
+        await callback.message.answer('Выберите пожалуйста один из пунктов меню, для продолжения',
+                                      reply_markup=start_keyboard)
     else:
         await callback.message.answer('Для продолжения нужно выбрать один из вариантов')
         await FSMHotels.sort_hotels.set()
@@ -163,4 +149,5 @@ def register_handler_hotels(dp: Dispatcher):
     dp.register_message_handler(arrival_dates, state=FSMHotels.get_dates)
     dp.register_callback_query_handler(get_hotels_count, state=FSMHotels.count_of_hotels)
     dp.register_callback_query_handler(sort_hotels, state=FSMHotels.sort_hotels)
-    dp.register_callback_query_handler(find_hotels, Text(startswith='//'), state=FSMHotels.get_dic_with_hotels)
+    dp.register_callback_query_handler(find_hotels, Text(startswith='//'),
+                                       state=FSMHotels.get_dic_with_hotels)

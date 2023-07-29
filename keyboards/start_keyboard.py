@@ -2,14 +2,15 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 
 async def start_button():
+    """
+    Функция, возвращающая ReplyKeyboardMarkup с кнопками для начала взаимодействия.
+
+    Returns:
+        ReplyKeyboardMarkup: Объект с кнопками для начала взаимодействия.
+    """
     key_board = ReplyKeyboardMarkup(
         resize_keyboard=True)
 
-    button_one = KeyboardButton('/Отель')
-    button_two = KeyboardButton('/Посмотреть кафе и рестораны')
-    button_three = KeyboardButton('/Погода')
-
-    key_board.add(button_one )
-    key_board.add(button_two)
-    key_board.add(button_three)
+    key_board.add(KeyboardButton('/Отель')).add(KeyboardButton('/Посмотреть кафе и рестораны')).add(
+        KeyboardButton('/Погода'))
     return key_board
