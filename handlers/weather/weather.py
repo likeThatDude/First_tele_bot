@@ -5,6 +5,7 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from keyboards.location_button import location_button
+from keyboards.start_keyboard import start_button
 from utilities.find_location.find_city import user_location
 from utilities.weather.get_weather import location_weather
 
@@ -76,6 +77,8 @@ async def get_weather(message: types.Message, state: FSMContext):
                                                      f'{data["weather"][0]["description"].capitalize()}'
                                                      f'\nВлажность: {round(data["main"]["humidity"], 1)}%')
         await state.finish()
+        await bot.send_message(message.from_user.id, 'Для продолжения работы выберите один из пунктов меню',
+                               reply_markup=start_button)
     else:
         await bot.send_message(message.from_user.id, 'Ошибка ввода города. Пожалуйста, попробуйте еще раз.')
 

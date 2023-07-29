@@ -110,7 +110,9 @@ async def find_hotels(callback: types.CallbackQuery, state: FSMContext):
                                                dic_with_user_answers['dates'][0],
                                                dic_with_user_answers['dates'][1],
                                                dic_with_user_answers['rating'],
-                                               dic_with_user_answers['count'])
+                                               dic_with_user_answers['count'],
+                                               'class_descending' if dic_with_user_answers['rating'] is True
+                                               else 'class_ascending')
 
         if len(hotels_list) == 0:
             await callback.message.answer(f'Извините, для вашего города: {dic_with_user_answers["city"]}, '
