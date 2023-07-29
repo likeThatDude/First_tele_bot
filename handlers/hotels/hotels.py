@@ -31,10 +31,11 @@ class FSMHotels(StatesGroup):
 
 
 async def start_search_hotels(message: types.Message):
+    location_keyboard = await location_button()
     await bot.send_message(message.from_user.id, 'Введите пожалуйста город, в котором будем искать отель.'
                                                  '\nИли можете отправить свою геолокацию,'
                                                  '\nя найду отели в городе вашего нахождения.',
-                           reply_markup=location_button)
+                           reply_markup=location_keyboard)
     await FSMHotels.ask_about_city.set()
 
 

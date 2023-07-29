@@ -1,12 +1,12 @@
-from create_bot import bot, weather_key
-from aiogram import types, Dispatcher
-import requests
 import json
 import datetime
+from create_bot import bot
+from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from keyboards.location_button import location_button
 from utilities.find_location.find_city import user_location
+from utilities.weather.get_weather import location_weather
 
 
 class FSMWeather(StatesGroup):
@@ -18,17 +18,24 @@ async def get_city(message: types.Message):
     Функция, которая запускается при команде "/Погода" или начале запроса погоды.
     Она запрашивает у пользователя название города или просит поделиться геолокацией для получения данных о погоде.
 
-    Входные параметры:
-    - message: объект типа types.Message - сообщение от пользователя.
+    Параметры:
+        message (types.Message): Объект события от Telegram с информацией о сообщении пользователя.
 
-    Выходные параметры: нет.
+    Возвращает:
+        None
+
+    Действие:
+        Отправляет сообщение пользователю с текстом о запросе названия города или поделиться местоположением.
+        В сообщении будет также прикреплена пользовательская клавиатура с кнопкой "Отправить местоположение".
+        Задает состояние FSMWeather.correct_cite_name для следующего шага конечного автомата.
     """
+    location_keyboard = await location_button()
     await bot.send_message(message.from_user.id, '\t\t⛅️    Меню погоды    ⛅️\n'
                                                  '\nДля начала мне нужно знать город,'
                                                  '\nв котором вам нужно узнать погоду.'
                                                  '\nВведите город или поделитесь геолокацией со мной.'
                                                  '\nЧтобы поделиться, нажмите кнопку снизу.',
-                           reply_markup=location_button)
+                           reply_markup=location_keyboard)
     await FSMWeather.correct_cite_name.set()
 
 
@@ -38,18 +45,26 @@ async def get_weather(message: types.Message, state: FSMContext):
     Она получает данные о погоде для указанного города с использованием API OpenWeatherMap
     и отправляет результат пользователю.
 
-    Входные параметры:
-    - message: объект типа types.Message - сообщение от пользователя.
-    - state: объект типа FSMContext - состояние бота для управления его поведением.
+    Параметры:
+        message (types.Message): Объект события от Telegram с информацией о сообщении пользователя.
+        state (FSMContext): Контекст состояния конечного автомата для управления диалогом с пользователем.
 
     Выходные параметры: нет.
+
+    Действие:
+        Получает название города из пользовательского ввода или местоположения с помощью функции user_location.
+        Использует полученное название города для получения данных о погоде с помощью функции location_weather.
+        Если запрос выполнен успешно (статус 200), отправляет пользователю сообщение с информацией о погоде,
+        включая температуру, ощущаемую температуру, описание погоды и влажность.
+        Завершает состояние конечного автомата. Если название города недействительно,
+        отправляет пользователю сообщение об ошибке с просьбой повторить ввод.
     """
+
     current_date_time = datetime.datetime.now()
     formatted_date_time = current_date_time.strftime('%d/%m/%Y %H:%M:%S')
-    city_name = await user_location(message)
+    city_name = await user_location(message=message)
 
-    all_data = requests.get(
-        f'https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={weather_key}&units=metric&lang=ru')
+    all_data = await location_weather(city_name=city_name)
 
     if all_data.status_code == 200:
         data = json.loads(all_data.text)
@@ -73,6 +88,11 @@ def register_handler_weather(dp: Dispatcher):
     - dp: объект типа Dispatcher - диспетчер, который управляет обработкой сообщений.
 
     Выходные параметры: нет.
+    Действие:
+        Регистрирует функции get_city и get_weather как обработчики для бота.
+        get_city будет вызываться при получении команды "/Погода".
+        get_weather будет вызываться при получении текстовых сообщений или местоположения,
+        когда пользователь находится в состоянии FSMWeather.correct_cite_name.
     """
     dp.register_message_handler(get_city, commands=['Погода'], state=None)
     dp.register_message_handler(get_weather, content_types=['text', 'location'], state=FSMWeather.correct_cite_name)
