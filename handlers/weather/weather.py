@@ -64,11 +64,11 @@ async def get_weather(message: types.Message, state: FSMContext):
     current_date_time = datetime.datetime.now()
     formatted_date_time = current_date_time.strftime('%d/%m/%Y %H:%M:%S')
     city_name = await user_location(message=message)
-
     all_data = await location_weather(city_name=city_name)
 
     if all_data.status_code == 200:
         data = json.loads(all_data.text)
+        start_keyboard = await start_button()
         await bot.send_message(message.from_user.id, f'Погода в городе: {city_name.capitalize()}\n'
                                                      f'\nДанные на: {formatted_date_time}\n'
                                                      f'\nТемпература: {round(data["main"]["temp"], 1)} °C'
@@ -78,7 +78,7 @@ async def get_weather(message: types.Message, state: FSMContext):
                                                      f'\nВлажность: {round(data["main"]["humidity"], 1)}%')
         await state.finish()
         await bot.send_message(message.from_user.id, 'Для продолжения работы выберите один из пунктов меню',
-                               reply_markup=start_button)
+                               reply_markup=start_keyboard)
     else:
         await bot.send_message(message.from_user.id, 'Ошибка ввода города. Пожалуйста, попробуйте еще раз.')
 
