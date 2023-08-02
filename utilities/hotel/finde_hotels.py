@@ -2,7 +2,7 @@ from create_bot import hotel_key
 import aiohttp
 
 
-async def create_hotels_dict(city_id, checkin_date, checkout_date, rating, hotels_count, adults_number=1):
+async def create_hotels_dict(city_id, checkin_date, checkout_date, rating, hotels_count, order_by, adults_number=1):
     """
     Создает словарь отелей с их оценками в указанном городе.
 
@@ -10,10 +10,12 @@ async def create_hotels_dict(city_id, checkin_date, checkout_date, rating, hotel
         city_id (int): ID города, в котором будет производиться поиск отелей.
         checkin_date (str): Дата заезда в формате "ГГГГ-ММ-ДД".
         checkout_date (str): Дата выезда в формате "ГГГГ-ММ-ДД".
-        rating (bool): Определяет, будут ли отели сортироваться по оценкам.
+        rating (bool): Определяет, как будут сортироваться отели по оценки.
             Если True, отели будут отсортированы по убыванию оценки.
-            Если False, отели будут отсортированы по цене (поведение по умолчанию).
+            Если False, отели будут отсортированы по возрастанию оценки.
         hotels_count (int): Количество отелей с оценками, которые нужно получить.
+        order_by (str): Синхронен с rating, если rating is True то выводит отели с большим количеством звёзд и наоборот
+            В данном случает BookingAPI выводит и отели без звёзд.
         adults_number (int, optional): Количество взрослых, проживающих в номере. По умолчанию 1.
 
     Возвращает:
@@ -38,7 +40,7 @@ async def create_hotels_dict(city_id, checkin_date, checkout_date, rating, hotel
             "units": "metric",
             "checkout_date": checkout_date,
             "adults_number": adults_number,
-            "order_by": "price",
+            "order_by": order_by,
             "dest_id": city_id,
             "filter_by_currency": "USD",
             "locale": "ru",
