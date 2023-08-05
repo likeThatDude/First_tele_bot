@@ -1,6 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-
 async def location_button():
     """
     Функция, возвращающая ReplyKeyboardMarkup с кнопкой запроса геопозиции.
