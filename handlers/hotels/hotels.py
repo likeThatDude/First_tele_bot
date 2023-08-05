@@ -9,7 +9,7 @@ from keyboards.cities_button import cities_button_generator
 from keyboards.yes_no_checker import yes_no_checker
 from keyboards.rating_keyboard import rating_button
 from keyboards.start_keyboard import start_button
-from keyboards.hotels_count_keyboard import get_count
+from keyboards.count_keyboard import get_count
 from utilities.find_location.find_city import user_location
 from utilities.hotel.find_destination import get_dic_with_cities
 from utilities.hotel.check_date import check_user_date
@@ -146,6 +146,12 @@ async def find_hotels(callback: types.CallbackQuery, state: FSMContext):
         await FSMHotels.sort_hotels.set()
 
 
+async def cancel(message: types.Message, state: FSMContext):
+    back_button = await start_button()
+    await bot.send_message(message.from_user.id, 'Возврат в главное меню', reply_markup=back_button)
+    await state.finish()
+
+
 def register_handler_hotels(dp: Dispatcher):
     dp.register_message_handler(start_search_hotels, commands=['Отель'])
     dp.register_message_handler(city_to_search, content_types=['text', 'location'], state=FSMHotels.ask_about_city)
@@ -155,3 +161,4 @@ def register_handler_hotels(dp: Dispatcher):
     dp.register_callback_query_handler(sort_hotels, state=FSMHotels.sort_hotels)
     dp.register_callback_query_handler(find_hotels, Text(startswith='//'),
                                        state=FSMHotels.get_dic_with_hotels)
+    dp.register_message_handler(cancel, Text(equals='отмена', ignore_case=True), state='*')
