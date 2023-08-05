@@ -19,6 +19,5 @@ async def get_rest_list(location_id, list_size):
     async with aiohttp.ClientSession() as session:
         async with session.post(url, data=payload, headers=headers) as response:
             response = await response.json()
-            print(response)
             result_list = response['results']['data']
             return result_list
