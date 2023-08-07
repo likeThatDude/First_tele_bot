@@ -27,7 +27,17 @@ class FSMHotels(StatesGroup):
 
 
 async def start_search_hotels(message: types.Message):
-    location_keyboard = await location_button()
+    """
+    Начинает процесс поиска отелей.
+    Отправляет пользователю сообщение с просьбой ввести город или отправить геолокацию.
+
+    Параметры:
+        message (types.Message): Объект события от Telegram с информацией о сообщении пользователя.
+
+    Действие:
+        Инициирует начало процесса поиска отелей и устанавливает первое состояние FSMHotels.ask_about_city.
+    """
+    location_keyboard = await location_button() # Создание клавиатуры
     await bot.send_message(message.from_user.id, 'Введите пожалуйста город, или отправьте геолокацию.'
                                                  '\nПока не работает для России и Беларуси.',
                            reply_markup=location_keyboard)
@@ -35,14 +45,26 @@ async def start_search_hotels(message: types.Message):
 
 
 async def city_to_search(message: types.Message, state: FSMContext):
-    city_name = await user_location(message)
-    search_result = await get_dic_with_cities(city_name)
+    """
+    Обрабатывает выбранный пользователем город для поиска отелей.
+    Извлекает данные о городе и формирует список городов для выбора пользователем.
+    Формируется клавиатура для выбора города. (keyboard = await cities_button_generator(ask_about_city))
+
+    Параметры:
+        message (types.Message): Объект события от Telegram с информацией о сообщении пользователя.
+        state (FSMContext): Контекст состояния конечного автомата для управления диалогом с пользователем.
+
+    Действие:
+        Обновляет состояние FSMHotels.ask_about_city и предоставляет пользователю список городов для выбора.
+    """
+    city_name = await user_location(message) # Получаем название города по локации или текстовому вводу
+    search_result = await get_dic_with_cities(city_name) # Получает информацию о городе из API Booking.com.
     async with state.proxy() as ask_about_city:
         for result in search_result:
             if 'dest_type' in result and result['dest_type'] == 'city':
                 ask_about_city[result["label"][:33]] = result
     await state.update_data(city_info=ask_about_city)
-    keyboard = await cities_button_generator(ask_about_city)
+    keyboard = await cities_button_generator(ask_about_city) # Генерация инлайн-кнопок с городами
     await FSMHotels.next()
     await bot.send_message(message.from_user.id, f'Ищу ваш город: {city_name.capitalize()}',
                            reply_markup=types.ReplyKeyboardRemove())
@@ -51,6 +73,19 @@ async def city_to_search(message: types.Message, state: FSMContext):
 
 
 async def get_city_id(callback: types.CallbackQuery, state: FSMContext):
+    """
+    Обрабатывает выбор города из списка после нажатия на кнопку в инлайн-клавиатуре.
+    Получает ID выбранного города и переходит к следующему шагу для запроса дат заезда и выезда.
+
+    Параметры:
+        callback (types.CallbackQuery): Объект события от Telegram с информацией о нажатии на кнопку.
+        state (FSMContext): Контекст состояния конечного автомата для управления диалогом с пользователем.
+
+    Действие:
+        Извлекает информацию о городе из состояния, обновляет данные о выбранном городе в контексте.
+        Отправляет пользователю сообщение с информацией о выбранном городе и запрашивает даты заезда и выезда.
+        Переходит к следующему шагу FSMHotels.get_dates.
+    """
     await callback.answer()
     data = await state.get_data()
     ask_about_city = data.get('city_info', {})
@@ -65,8 +100,21 @@ async def get_city_id(callback: types.CallbackQuery, state: FSMContext):
 
 
 async def arrival_dates(message: types.Message, state: FSMContext):
-    yes_no_keyboard = await yes_no_checker()
-    user_date = await check_user_date(message.text)
+    """
+    Обрабатывает введенные пользователем даты заезда и выезда.
+    Проверяет корректность введенного формата даты и предоставляет пользователю возможность редактировать даты.
+
+    Параметры:
+        message (types.Message): Объект события от Telegram с информацией о сообщении пользователя.
+        state (FSMContext): Контекст состояния конечного автомата для управления диалогом с пользователем.
+
+    Действие:
+        Проверяет введенные даты на корректность. Если даты некорректные, отправляет пользователю сообщение об ошибке.
+        Если даты корректные, сохраняет их в контексте и предоставляет пользователю возможность редактировать даты.
+        Переходит к следующему шагу FSMHotels.get_count.
+    """
+    yes_no_keyboard = await yes_no_checker() # Создание клавиатуры
+    user_date = await check_user_date(message.text) #Проверка даты на корректный ввод
     if user_date is False:
         await bot.send_message(message.from_user.id, 'Ошибка ввода даты. Повторите пожалуйста.')
     else:
@@ -80,6 +128,18 @@ async def arrival_dates(message: types.Message, state: FSMContext):
 
 
 async def get_hotels_count(callback: types.CallbackQuery):
+    """
+    Обрабатывает выбор количества отелей для вывода после нажатия на кнопку в инлайн-клавиатуре.
+    Переходит к следующему шагу для запроса дополнительной информации о выборе отелей.
+
+    Параметры:
+        callback (types.CallbackQuery): Объект события от Telegram с информацией о нажатии на кнопку.
+
+    Действие:
+        Если пользователь выбирает редактировать даты, отправляет запрос на ввод новых дат.
+        Иначе предоставляет пользователю выбор количества отелей для вывода.
+        Переходит к следующему шагу FSMHotels.count_of_hotels.
+    """
     await callback.answer()
     if callback.data == '//да':
         await callback.message.answer('Введите пожалуйста новые даты.')
@@ -91,6 +151,18 @@ async def get_hotels_count(callback: types.CallbackQuery):
 
 
 async def sort_hotels(callback: types.CallbackQuery, state: FSMContext):
+    """
+    Обрабатывает выбор сортировки отелей по рейтингу после нажатия на кнопку в инлайн-клавиатуре.
+    Получает выбранный пользователем параметр сортировки и переходит к следующему шагу для поиска отелей.
+
+    Параметры:
+        callback (types.CallbackQuery): Объект события от Telegram с информацией о нажатии на кнопку.
+        state (FSMContext): Контекст состояния конечного автомата для управления диалогом с пользователем.
+
+    Действие:
+        Извлекает информацию о количестве отелей из состояния, сохраняет выбранный пользователем параметр сортировки.
+        Отправляет пользователю сообщение с вопросом о выборе способа сортировки отелей и переходит к следующему шагу FSMHotels.get_dic_with_hotels.
+    """
     await callback.answer()
     rating_keyboard = await rating_button()
     async with state.proxy() as data:
@@ -102,6 +174,20 @@ async def sort_hotels(callback: types.CallbackQuery, state: FSMContext):
 
 
 async def find_hotels(callback: types.CallbackQuery, state: FSMContext):
+    """
+    Обрабатывает результаты поиска и вывода отелей после нажатия на кнопку в инлайн-клавиатуре.
+    Выводит результаты поиска отелей и завершает диалог с пользователем.
+
+    Параметры:
+        callback (types.CallbackQuery): Объект события от Telegram с информацией о нажатии на кнопку.
+        state (FSMContext): Контекст состояния конечного автомата для управления диалогом с пользователем.
+
+    Действие:
+        Извлекает информацию о параметрах поиска отелей и получает список отелей с заданными параметрами.
+        Если найдены отели, выводит информацию о каждом отеле, включая фотографии, оценку, класс и даты.
+        Если не найдено отелей, отправляет сообщение с соответствующим уведомлением.
+        Завершает диалог с пользователем и предоставляет возможность выбрать другой пункт меню.
+    """
     await callback.answer()
     if callback.data in ['//больше', '//меньше']:
         start_keyboard = await start_button()
@@ -117,8 +203,7 @@ async def find_hotels(callback: types.CallbackQuery, state: FSMContext):
                                                    else 'class_ascending')
 
             if len(hotels_list) == 0:
-                await callback.message.answer(f'Извините, для вашего города: {data["city"]}, '
-                                              f'не поддерживается поиск отелей')
+                await callback.message.answer(f'Извините, для вашего города не поддерживается поиск отелей')
             else:
                 if len(hotels_list) < data['count']:
                     await callback.message.answer(f'Извините я не смог найти {data["count"]} отелей.')
@@ -147,12 +232,44 @@ async def find_hotels(callback: types.CallbackQuery, state: FSMContext):
 
 
 async def cancel(message: types.Message, state: FSMContext):
+    """
+    Обрабатывает команду отмены действия и возвращает пользователя в главное меню.
+
+    Параметры:
+        message (types.Message): Объект события от Telegram с информацией о сообщении пользователя.
+        state (FSMContext): Контекст состояния конечного автомата для управления диалогом с пользователем.
+
+    Действие:
+        Отправляет сообщение о возврате в главное меню и завершает текущее состояние конечного автомата.
+    """
     back_button = await start_button()
     await bot.send_message(message.from_user.id, 'Возврат в главное меню', reply_markup=back_button)
     await state.finish()
 
 
 def register_handler_hotels(dp: Dispatcher):
+    """
+    Регистрирует обработчики команд и сообщений для функций, связанных с поиском отелей.
+
+    Параметры:
+        dp (Dispatcher): Объект диспетчера от Aiogram для регистрации обработчиков.
+
+    Действие:
+        Регистрирует обработчик команды "/Отель" для запуска функции start_search_hotels.
+        Регистрирует обработчик выбора города для функции city_to_search
+            в состоянии FSMHotels.ask_about_city.
+        Регистрирует обработчик колбэк-запроса для получения идентификатора города для функции get_city_id
+            с префиксом "//" и в состоянии FSMHotels.get_city.
+        Регистрирует обработчик сообщений для запроса даты заезда для функции arrival_dates
+            в состоянии FSMHotels.get_dates.
+        Регистрирует обработчик колбэк-запроса для выбора количества отелей для функции get_hotels_count
+            в состоянии FSMHotels.count_of_hotels.
+        Регистрирует обработчик колбэк-запроса для сортировки отелей для функции sort_hotels
+            в состоянии FSMHotels.sort_hotels.
+        Регистрирует обработчик колбэк-запроса для начала поиска отелей для функции find_hotels
+            с префиксом "//" и в состоянии FSMHotels.get_dic_with_hotels.
+        Регистрирует обработчик текстового сообщения "отмена" для функции cancel в любом состоянии.
+    """
     dp.register_message_handler(start_search_hotels, commands=['Отель'])
     dp.register_message_handler(city_to_search, content_types=['text', 'location'], state=FSMHotels.ask_about_city)
     dp.register_callback_query_handler(get_city_id, Text(startswith='//'), state=FSMHotels.get_city)
