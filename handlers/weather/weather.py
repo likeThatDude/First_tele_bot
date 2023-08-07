@@ -77,7 +77,7 @@ async def get_weather(message: types.Message, state: FSMContext):
                                                      f'{data["weather"][0]["description"].capitalize()}'
                                                      f'\nВлажность: {round(data["main"]["humidity"], 1)}%')
         await state.finish()
-        await bot.send_message(message.from_user.id, 'Для продолжения работы выберите один из пунктов меню',
+        await bot.send_message(message.from_user.id, 'Для продолжения работы выберите один из пунктов меню:',
                                reply_markup=start_keyboard)
     else:
         await bot.send_message(message.from_user.id, 'Ошибка ввода города. Пожалуйста, попробуйте еще раз.')

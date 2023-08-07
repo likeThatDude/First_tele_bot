@@ -1,15 +1,15 @@
 import asyncio
 from create_bot import bot
 from aiogram import types, Dispatcher
-from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher import FSMContext
-from keyboards.location_button import location_button
+from aiogram.dispatcher.filters import Text
+from aiogram.dispatcher.filters.state import State, StatesGroup
 from keyboards.count_keyboard import get_count
 from keyboards.start_keyboard import start_button
-from utilities.find_location.find_city import user_location
+from keyboards.location_button import location_button
 from utilities.restaurants.get_city_id import get_city_id
 from utilities.restaurants.get_rest_list import get_rest_list
+from utilities.find_location.find_city import user_location
 
 
 class FSMRest(StatesGroup):
@@ -45,7 +45,7 @@ async def get_rest_count(callback: types.CallbackQuery, state: FSMContext):
         data['restaurants'] = list_with_restaurants
         await callback.message.answer(f'Вот лучшие рестораны в городе: {data["city_name"]}')
         for restaurant in data['restaurants']:
-            await bot.send_photo(restaurant['photo']['images']['original']['url'])
+            await bot.send_photo(callback.message.chat.id, restaurant['photo']['images']['original']['url'])
             await callback.message.answer(f'Название: {restaurant["name"]}'
                                           f'\nПозиция в рейтинге: {restaurant["ranking_position"]}'
                                           f'\nРейтинг: {restaurant["rating"]}'
@@ -71,4 +71,4 @@ def register_handler_hotels(dp: Dispatcher):
     dp.register_message_handler(rest_start, commands=['Рестораны'])
     dp.register_message_handler(user_choice, content_types=['text', 'location'], state=FSMRest.city)
     dp.register_callback_query_handler(get_rest_count, Text(startswith='//'), state=FSMRest.rest_count)
-    dp.register_message_handler(cancel,Text(equals='отмена', ignore_case=True), state='*')
+    dp.register_message_handler(cancel, Text(equals='отмена', ignore_case=True), state='*')

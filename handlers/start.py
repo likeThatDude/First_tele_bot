@@ -1,7 +1,9 @@
-from aiogram import types, Dispatcher
 from create_bot import bot
-from keyboards.start_keyboard import start_button
 from datetime import datetime
+from aiogram import types, Dispatcher
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters import Text
+from keyboards.start_keyboard import start_button
 
 
 async def start_command(message: types.Message):
@@ -44,6 +46,17 @@ async def start_command(message: types.Message):
                            reply_markup=start_keyboard)
 
 
+async def cancel(message: types.Message, state: FSMContext):
+    back_button = await start_button()
+    current_state = await state.get_state()
+    if current_state is None:
+        await bot.send_message(message.from_user.id, 'Вы уже в главном меню.'
+                                                     '\nПросто вызовите клавиатуру около поля ввода текста')
+    else:
+        await bot.send_message(message.from_user.id, 'Возврат в главное меню', reply_markup=back_button)
+        await state.finish()
+
+
 def register_handler_start(dp: Dispatcher):
     """
     Регистрация обработчика команды "/start" в диспетчере.
@@ -62,3 +75,4 @@ def register_handler_start(dp: Dispatcher):
 
     """
     dp.register_message_handler(start_command, commands=['start'])
+    dp.register_message_handler(cancel, Text(equals='отмена', ignore_case=True), state='*')
