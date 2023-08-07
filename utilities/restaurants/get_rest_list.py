@@ -2,6 +2,17 @@ import aiohttp
 from create_bot import rest_key
 
 async def get_rest_list(location_id, list_size):
+    """
+    Функция для получения списка ресторанов для заданного идентификатора местоположения.
+
+    Параметры:
+        location_id (int): Идентификатор местоположения (города).
+        list_size (int): Количество ресторанов для получения.
+
+    Возвращает:
+        Список словарей с информацией о ресторанах,
+        если успешно получен, либо False в случае ошибки.
+    """
     url = "https://worldwide-restaurants.p.rapidapi.com/search"
 
     payload = {

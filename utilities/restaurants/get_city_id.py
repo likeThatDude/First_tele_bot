@@ -4,6 +4,15 @@ from create_bot import rest_key
 
 
 async def get_city_id(city_name):
+    """
+    Функция для получения идентификатора города по его имени с использованием API.
+
+    Параметры:
+        city_name (str): Название города для поиска и получения идентификатора.
+
+    Возвращает:
+        id города, если успешно найден, либо False в случае ошибки.
+    """
     url = "https://worldwide-restaurants.p.rapidapi.com/typeahead"
 
     payload = {

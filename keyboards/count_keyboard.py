@@ -3,10 +3,14 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 async def get_count():
     """
-    Функция, возвращающая InlineKeyboardMarkup с кнопками для выбора количества отелей.
+    Функция для создания инлайн-клавиатуры с кнопками для выбора количества ресторанов.
 
-    Returns:
-        InlineKeyboardMarkup: Объект с кнопками выбора числа.
+    Действие:
+        Создает и возвращает инлайн-клавиатуру с кнопками для выбора количества ресторанов.
+        Каждая кнопка соответствует определенному количеству ресторанов.
+
+    Возвращает:
+        InlineKeyboardMarkup: Объект инлайн-клавиатуры с кнопками для выбора количества ресторанов.
     """
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(InlineKeyboardButton('3', callback_data='//3'))
