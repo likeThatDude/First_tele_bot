@@ -18,7 +18,9 @@ async def get_city_id(city_name):
 
     async with aiohttp.ClientSession() as session:
         async with session.post(url, data=payload, headers=headers) as response:
-            response_data = await response.json()
-            location_id = response_data['results']['data'][0]['result_object']['location_id']
-            return location_id
-
+            if response.status == 200:
+                response_data = await response.json()
+                location_id = response_data['results']['data'][0]['result_object']['location_id']
+                return location_id
+            else:
+                return False

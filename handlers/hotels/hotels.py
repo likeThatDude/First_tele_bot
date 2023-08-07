@@ -117,8 +117,7 @@ async def find_hotels(callback: types.CallbackQuery, state: FSMContext):
                                                    else 'class_ascending')
 
             if len(hotels_list) == 0:
-                await callback.message.answer(f'Извините, для вашего города: {data["city"]}, '
-                                              f'не поддерживается поиск отелей')
+                await callback.message.answer(f'Извините, для вашего города не поддерживается поиск отелей')
             else:
                 if len(hotels_list) < data['count']:
                     await callback.message.answer(f'Извините я не смог найти {data["count"]} отелей.')

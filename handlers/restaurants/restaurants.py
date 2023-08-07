@@ -28,36 +28,48 @@ async def rest_start(message: types.Message):
 
 async def user_choice(message: types.Message, state: FSMContext):
     city_name = await user_location(message)
-    async with state.proxy() as data:
-        city_id = await get_city_id(city_name)
-        data['city_name'] = city_name
-        data['city_id'] = city_id
-    keyboard = await get_count()
-    await bot.send_message(message.from_user.id, f'Какое количество ресторанов найти ?', reply_markup=keyboard)
-    await FSMRest.next()
+    city_id = await get_city_id(city_name)
+    if city_id is not False:
+        async with state.proxy() as data:
+            data['city_name'] = city_name
+            data['city_id'] = city_id
+        keyboard = await get_count()
+        await bot.send_message(message.from_user.id, f'Какое количество ресторанов найти ?', reply_markup=keyboard)
+        await FSMRest.next()
+    else:
+        await bot.send_message(message.from_user.id, f'Ошибка поиска города.'
+                                                     f'\nПопробуйте ввести заново или'
+                                                     f'\nвведите << отмена >> для возврата в главное меню.')
+
 
 
 async def get_rest_count(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
     rest_count = int(callback.data[2:])
+    start_keyboard = await start_button()
     async with state.proxy() as data:
         list_with_restaurants = await get_rest_list(data['city_id'], rest_count)
-        data['restaurants'] = list_with_restaurants
-        await callback.message.answer(f'Вот лучшие рестораны в городе: {data["city_name"]}')
-        for restaurant in data['restaurants']:
-            await bot.send_photo(callback.message.chat.id, restaurant['photo']['images']['original']['url'])
-            await callback.message.answer(f'Название: {restaurant["name"]}'
-                                          f'\nПозиция в рейтинге: {restaurant["ranking_position"]}'
-                                          f'\nРейтинг: {restaurant["rating"]}'
-                                          f'\nСейчас: {restaurant["open_now_text"]}\n'
-                                          f'\nКонтакты:'
-                                          f'\nТелефон: {restaurant["phone"]}'
-                                          f'\nemail: {restaurant["email"]}'
-                                          f'\nадрес: {restaurant["address"]}'
-                                          f'\nДля более подробной информации'
-                                          f'\nпройдите по ссылке:'
-                                          f'\n{restaurant["web_url"]}', disable_web_page_preview=True)
-            await asyncio.sleep(1.0)
+        if list_with_restaurants is not False:
+            data['restaurants'] = list_with_restaurants
+            await callback.message.answer(f'Вот лучшие рестораны в городе: {data["city_name"]}')
+            for restaurant in data['restaurants']:
+                await bot.send_photo(callback.message.chat.id, restaurant['photo']['images']['original']['url'])
+                await callback.message.answer(f'Название: {restaurant["name"]}'
+                                              f'\nПозиция в рейтинге: {restaurant["ranking_position"]}'
+                                              f'\nРейтинг: {restaurant["rating"]}'
+                                              f'\nСейчас: {restaurant["open_now_text"]}\n'
+                                              f'\nКонтакты:'
+                                              f'\nТелефон: {restaurant["phone"]}'
+                                              f'\nemail: {restaurant["email"]}'
+                                              f'\nадрес: {restaurant["address"]}'
+                                              f'\nДля более подробной информации'
+                                              f'\nпройдите по ссылке:'
+                                              f'\n{restaurant["web_url"]}', disable_web_page_preview=True)
+                await asyncio.sleep(1.0)
+            await callback.message.answer(f'Для продолжения выберете один из вариантов:', reply_markup=start_keyboard)
+        else:
+            await callback.message.answer(f'Извините, произошла ошибка поиска ресторанов,'
+                                          f'\nвозврат в главное меню.', reply_markup=start_keyboard)
     await state.finish()
 
 
