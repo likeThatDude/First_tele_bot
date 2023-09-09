@@ -1,6 +1,7 @@
 from create_bot import bot
 from datetime import datetime
 from aiogram import types, Dispatcher
+from data_base.sqlite_db import add_user
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from keyboards.start_keyboard import start_button
@@ -27,6 +28,7 @@ async def start_command(message: types.Message):
 
     current_time = datetime.now().time()
     hour = current_time.hour
+    await add_user(message.from_user.id, message.from_user.first_name)
 
     if 4 <= hour < 10:
         time_period = "Доброе утро"

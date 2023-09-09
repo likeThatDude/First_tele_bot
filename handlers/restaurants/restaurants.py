@@ -10,6 +10,7 @@ from keyboards.location_button import location_button
 from utilities.restaurants.get_city_id import get_city_id
 from utilities.restaurants.get_rest_list import get_rest_list
 from utilities.find_location.find_city import user_location
+from data_base.sqlite_db import add_request
 
 
 class FSMRest(StatesGroup):
@@ -89,23 +90,29 @@ async def get_rest_count(callback: types.CallbackQuery, state: FSMContext):
     rest_count = int(callback.data[2:])
     start_keyboard = await start_button()
     async with state.proxy() as data:
-        list_with_restaurants = await get_rest_list(data['city_id'], rest_count)
+        await add_request((callback.message.chat.id,
+                           'Поиск ресторанов',
+                           f'Город: {data["city_name"].capitalize()}.'))
+        list_with_restaurants = await get_rest_list(data['city_id'])
         if list_with_restaurants is not False:
-            data['restaurants'] = list_with_restaurants
+            data['restaurants'] = list_with_restaurants[:rest_count]
             await callback.message.answer(f'Вот лучшие рестораны в городе: {data["city_name"]}')
             for restaurant in data['restaurants']:
-                await bot.send_photo(callback.message.chat.id, restaurant['photo']['images']['original']['url'])
-                await callback.message.answer(f'Название: {restaurant["name"]}'
-                                              f'\nПозиция в рейтинге: {restaurant["ranking_position"]}'
-                                              f'\nРейтинг: {restaurant["rating"]}'
-                                              f'\nСейчас: {restaurant["open_now_text"]}\n'
-                                              f'\nКонтакты:'
-                                              f'\nТелефон: {restaurant["phone"]}'
-                                              f'\nemail: {restaurant["email"]}'
-                                              f'\nадрес: {restaurant["address"]}'
-                                              f'\nДля более подробной информации'
-                                              f'\nпройдите по ссылке:'
-                                              f'\n{restaurant["web_url"]}', disable_web_page_preview=True)
+                try:
+                    await bot.send_photo(callback.message.chat.id, restaurant['photo']['images']['original']['url'])
+                    await callback.message.answer(f'Название: {restaurant["name"]}'
+                                                  f'\nПозиция в рейтинге: {restaurant["ranking_position"]}'
+                                                  f'\nРейтинг: {restaurant["rating"]}'
+                                                  f'\nСейчас: {restaurant["open_now_text"]}\n'
+                                                  f'\nКонтакты:'
+                                                  f'\nТелефон: {restaurant["phone"]}'
+                                                  f'\nemail: {restaurant["email"]}'
+                                                  f'\nадрес: {restaurant["address"]}'
+                                                  f'\nДля более подробной информации'
+                                                  f'\nпройдите по ссылке:'
+                                                  f'\n{restaurant["web_url"]}', disable_web_page_preview=True)
+                except KeyError:
+                    continue
                 await asyncio.sleep(1.0)
             await callback.message.answer(f'Для продолжения выберете один из вариантов:', reply_markup=start_keyboard)
         else:

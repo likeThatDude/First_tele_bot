@@ -1,9 +1,11 @@
+import sqlite3
 from aiogram.utils import executor
 from handlers import start
 from handlers.weather import weather
 from handlers.hotels import hotels
 from handlers.restaurants import  restaurants
 from create_bot import dp
+from data_base import sqlite_db
 
 
 async def on_startup(_):
@@ -17,6 +19,7 @@ async def on_startup(_):
         Выводит сообщение о том, что бот онлайн.
     """
     print('Bot online !')
+    sqlite_db.sql_start()
 
 start.register_handler_start(dp)
 weather.register_handler_weather(dp)

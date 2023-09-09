@@ -1,7 +1,7 @@
 import aiohttp
 from create_bot import rest_key
 
-async def get_rest_list(location_id, list_size):
+async def get_rest_list(location_id):
     """
     Функция для получения списка ресторанов для заданного идентификатора местоположения.
 
@@ -17,9 +17,9 @@ async def get_rest_list(location_id, list_size):
 
     payload = {
         "language": "ru_RU",
-        "limit": list_size,
         "location_id": location_id,
-        "currency": "USD"
+        "currency": "USD",
+        "offset": "0"
     }
     headers = {
         "content-type": "application/x-www-form-urlencoded",
@@ -32,6 +32,8 @@ async def get_rest_list(location_id, list_size):
             if response.status == 200:
                 response = await response.json()
                 result_list = response['results']['data']
+                for i in result_list:
+                    print(i)
                 return result_list
             else:
                 return False

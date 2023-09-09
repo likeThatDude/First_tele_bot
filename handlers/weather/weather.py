@@ -8,6 +8,7 @@ from keyboards.location_button import location_button
 from keyboards.start_keyboard import start_button
 from utilities.find_location.find_city import user_location
 from utilities.weather.get_weather import location_weather
+from data_base.sqlite_db import add_request
 
 
 class FSMWeather(StatesGroup):
@@ -63,10 +64,16 @@ async def get_weather(message: types.Message, state: FSMContext):
 
     current_date_time = datetime.datetime.now()
     formatted_date_time = current_date_time.strftime('%d/%m/%Y %H:%M:%S')
+
     city_name = await user_location(message=message)
     all_data = await location_weather(city_name=city_name)
 
+
+
     if all_data.status_code == 200:
+        await add_request((message.from_user.id,
+                           'Проверка погоды',
+                           f'Город: {city_name.capitalize()}.'))
         data = json.loads(all_data.text)
         start_keyboard = await start_button()
         await bot.send_message(message.from_user.id, f'Погода в городе: {city_name.capitalize()}\n'

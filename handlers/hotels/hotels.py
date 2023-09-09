@@ -15,6 +15,7 @@ from utilities.hotel.find_destination import get_dic_with_cities
 from utilities.hotel.check_date import check_user_date
 from utilities.hotel.finde_hotels import create_hotels_dict
 from utilities.hotel.hotel_photo import get_hotel_photo
+from data_base.sqlite_db import add_request
 
 
 class FSMHotels(StatesGroup):
@@ -37,7 +38,7 @@ async def start_search_hotels(message: types.Message):
     Действие:
         Инициирует начало процесса поиска отелей и устанавливает первое состояние FSMHotels.ask_about_city.
     """
-    location_keyboard = await location_button() # Создание клавиатуры
+    location_keyboard = await location_button()  # Создание клавиатуры
     await bot.send_message(message.from_user.id, 'Введите пожалуйста город, или отправьте геолокацию.'
                                                  '\nПока не работает для России и Беларуси.',
                            reply_markup=location_keyboard)
@@ -57,14 +58,14 @@ async def city_to_search(message: types.Message, state: FSMContext):
     Действие:
         Обновляет состояние FSMHotels.ask_about_city и предоставляет пользователю список городов для выбора.
     """
-    city_name = await user_location(message) # Получаем название города по локации или текстовому вводу
-    search_result = await get_dic_with_cities(city_name) # Получает информацию о городе из API Booking.com.
+    city_name = await user_location(message)  # Получаем название города по локации или текстовому вводу
+    search_result = await get_dic_with_cities(city_name)  # Получает информацию о городе из API Booking.com.
     async with state.proxy() as ask_about_city:
         for result in search_result:
             if 'dest_type' in result and result['dest_type'] == 'city':
                 ask_about_city[result["label"][:33]] = result
     await state.update_data(city_info=ask_about_city)
-    keyboard = await cities_button_generator(ask_about_city) # Генерация инлайн-кнопок с городами
+    keyboard = await cities_button_generator(ask_about_city)  # Генерация инлайн-кнопок с городами
     await FSMHotels.next()
     await bot.send_message(message.from_user.id, f'Ищу ваш город: {city_name.capitalize()}',
                            reply_markup=types.ReplyKeyboardRemove())
@@ -93,6 +94,7 @@ async def get_city_id(callback: types.CallbackQuery, state: FSMContext):
     current_city = ask_about_city[callback_user_data]
     async with state.proxy() as data:
         data['city'] = current_city['dest_id']
+        data['city_name'] = current_city["label"]
     await callback.message.answer(f'Ищем отели в: {current_city["label"]}')
     await callback.message.answer('Введите даты заезда и выезда,'
                                   '\nв формате: 00/00/0000-00/00/0000')
@@ -113,8 +115,8 @@ async def arrival_dates(message: types.Message, state: FSMContext):
         Если даты корректные, сохраняет их в контексте и предоставляет пользователю возможность редактировать даты.
         Переходит к следующему шагу FSMHotels.get_count.
     """
-    yes_no_keyboard = await yes_no_checker() # Создание клавиатуры
-    user_date = await check_user_date(message.text) #Проверка даты на корректный ввод
+    yes_no_keyboard = await yes_no_checker()  # Создание клавиатуры
+    user_date = await check_user_date(message.text)  # Проверка даты на корректный ввод
     if user_date is False:
         await bot.send_message(message.from_user.id, 'Ошибка ввода даты. Повторите пожалуйста.')
     else:
@@ -192,6 +194,9 @@ async def find_hotels(callback: types.CallbackQuery, state: FSMContext):
     if callback.data in ['//больше', '//меньше']:
         start_keyboard = await start_button()
         async with state.proxy() as data:
+            await add_request((callback.message.chat.id,
+                               'Поиск отелей',
+                               f'Город: {data["city_name"]}. Даты: c {data["dates"][0]} по {data["dates"][1]}'))
             data['rating'] = True if callback.data == '//больше' else False
 
             hotels_list = await create_hotels_dict(data['city'],

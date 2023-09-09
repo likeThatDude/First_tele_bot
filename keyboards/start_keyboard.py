@@ -15,5 +15,5 @@ async def start_button():
         resize_keyboard=True)
 
     key_board.add(KeyboardButton('/Отель')).add(KeyboardButton('/Рестораны')).add(
-        KeyboardButton('/Погода'))
+        KeyboardButton('/Погода')).add(KeyboardButton('/История_запросов'))
     return key_board

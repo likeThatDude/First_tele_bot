@@ -50,7 +50,8 @@ async def get_city_name(latitude, longitude):
         Для определения города используется обратное геокодирование (reverse geocoding).
         Возвращает название города, если оно найдено, или None, если название города не определено или произошла ошибка.
     """
-    geolocator = Nominatim(user_agent="geoapiExercises")
+
+    geolocator = Nominatim(user_agent="tele_bot")
     location = geolocator.reverse((latitude, longitude), language="ru")
 
     if location and location.raw.get("address"):
