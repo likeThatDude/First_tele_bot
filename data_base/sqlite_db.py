@@ -2,6 +2,7 @@ import sqlite3 as sq
 from datetime import datetime
 import pytz
 
+
 def sql_start():
     global base, cur
     base = sq.connect('bot_database.db')
@@ -36,3 +37,25 @@ async def add_request(data):
     current_time = datetime.now(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M:%S')
     cur.execute('INSERT INTO request_history VALUES (?, ?, ?, ?)', (*data, current_time))
     base.commit()
+
+
+async def get_history(user_id):
+    cur.execute("""
+                SELECT 
+                    request_history.category, 
+                    request_history.request, 
+                    request_history.request_date
+                FROM 
+                    request_history
+                JOIN 
+                    users
+                ON 
+                    request_history.user_id = users.user_tg_id
+                WHERE
+                    users.user_tg_id = ?
+                ORDER BY 
+                    request_history.request_date DESC
+                LIMIT  10
+                """, (user_id,))
+    user_search_data = cur.fetchall()
+    return user_search_data
