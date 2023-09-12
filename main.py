@@ -1,4 +1,3 @@
-import sqlite3
 from aiogram.utils import executor
 from handlers import start
 from handlers.weather import weather
@@ -27,6 +26,7 @@ weather.register_handler_weather(dp)
 hotels.register_handler_hotels(dp)
 restaurants.register_handler_hotels(dp)
 history.register_handler_hotels(dp)
+
 if __name__ == '__main__':
     """
     Точка входа в программу.

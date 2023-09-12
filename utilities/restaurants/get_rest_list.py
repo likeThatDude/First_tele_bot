@@ -32,8 +32,6 @@ async def get_rest_list(location_id):
             if response.status == 200:
                 response = await response.json()
                 result_list = response['results']['data']
-                for i in result_list:
-                    print(i)
                 return result_list
             else:
                 return False
