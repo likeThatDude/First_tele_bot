@@ -4,6 +4,17 @@ import pytz
 
 
 def sql_start():
+    """
+    Функция для инициализации и подключения к базе данных SQLite.
+
+    Параметры: нет.
+
+    Действие:
+        - Устанавливает соединение с базой данных.
+        - Создает таблицу 'users' для хранения информации о пользователях, если она не существует.
+        - Создает таблицу 'request_history' для хранения истории запросов, если она не существует.
+        - Создает индексы для ускорения поиска данных.
+    """
     global base, cur
     base = sq.connect('bot_database.db')
     cur = base.cursor()
@@ -28,18 +39,49 @@ def sql_start():
 
 
 async def add_user(user_tg_id, user_name):
+    """
+    Функция для добавления пользователя в базу данных.
+
+    Параметры:
+        user_tg_id (int): Идентификатор Telegram пользователя.
+        user_name (str): Имя пользователя.
+
+    Действие:
+        Добавляет пользователя в таблицу 'users' с указанными данными.
+    """
     current_time = datetime.now(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M:%S')
     cur.execute('INSERT OR IGNORE INTO users  VALUES (?, ?, ?)', (user_tg_id, user_name, current_time))
     base.commit()
 
 
 async def add_request(data):
+    """
+    Функция для добавления запроса в историю запросов.
+
+    Параметры:
+        data (tuple): Кортеж данных о запросе, содержащий (user_id, category, request).
+
+    Действие:
+        Добавляет информацию о запросе в таблицу 'request_history'.
+    """
     current_time = datetime.now(pytz.timezone('Europe/Moscow')).strftime('%Y-%m-%d %H:%M:%S')
     cur.execute('INSERT INTO request_history VALUES (?, ?, ?, ?)', (*data, current_time))
     base.commit()
 
 
 async def get_history(user_id):
+    """
+    Функция для получения истории запросов пользователя.
+
+    Параметры:
+        user_id (int): Идентификатор Telegram пользователя.
+
+    Возвращает:
+        list: Список кортежей с данными о запросах пользователя.
+
+    Действие:
+        Извлекает последние 10 запросов пользователя из таблицы 'request_history'.
+    """
     cur.execute("""
                 SELECT 
                     request_history.category, 

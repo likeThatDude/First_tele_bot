@@ -4,6 +4,7 @@ from handlers.weather import weather
 from handlers.hotels import hotels
 from handlers.restaurants import  restaurants
 from handlers.search_history import history
+from handlers.help import help
 from create_bot import dp
 from data_base import sqlite_db
 
@@ -16,7 +17,7 @@ async def on_startup(_):
         _ (Any): Дополнительный параметр (не используется).
 
     Действие:
-        Выводит сообщение о том, что бот онлайн.
+        Выводит сообщение о том, что бот онлайн и вызывает функцию для установления соединения с базой данных.
     """
     print('Bot online !')
     sqlite_db.sql_start()
@@ -26,6 +27,7 @@ weather.register_handler_weather(dp)
 hotels.register_handler_hotels(dp)
 restaurants.register_handler_hotels(dp)
 history.register_handler_hotels(dp)
+help.register_handler_help(dp)
 
 if __name__ == '__main__':
     """
