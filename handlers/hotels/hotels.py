@@ -60,17 +60,21 @@ async def city_to_search(message: types.Message, state: FSMContext):
     """
     city_name = await user_location(message)  # Получаем название города по локации или текстовому вводу
     search_result = await get_dic_with_cities(city_name)  # Получает информацию о городе из API Booking.com.
-    async with state.proxy() as ask_about_city:
-        for result in search_result:
-            if 'dest_type' in result and result['dest_type'] == 'city':
-                ask_about_city[result["label"][:33]] = result
-    await state.update_data(city_info=ask_about_city)
-    keyboard = await cities_button_generator(ask_about_city)  # Генерация инлайн-кнопок с городами
-    await FSMHotels.next()
-    await bot.send_message(message.from_user.id, f'Ищу ваш город: {city_name.capitalize()}',
-                           reply_markup=types.ReplyKeyboardRemove())
-    await bot.send_message(message.from_user.id, f'Пожалуйста выберите один из вариантов: ',
-                           reply_markup=keyboard)
+    if len(search_result) == 0:
+        await bot.send_message(message.from_user.id, 'Некорректно введён город,'
+                                                     '\nповторите попытку:')
+    else:
+        async with state.proxy() as ask_about_city:
+            for result in search_result:
+                if 'dest_type' in result and result['dest_type'] == 'city':
+                    ask_about_city[result["label"][:33]] = result
+        await state.update_data(city_info=ask_about_city)
+        keyboard = await cities_button_generator(ask_about_city)  # Генерация инлайн-кнопок с городами
+        await FSMHotels.next()
+        await bot.send_message(message.from_user.id, f'Ищу ваш город: {city_name.capitalize()}',
+                               reply_markup=types.ReplyKeyboardRemove())
+        await bot.send_message(message.from_user.id, f'Пожалуйста выберите один из вариантов: ',
+                               reply_markup=keyboard)
 
 
 async def get_city_id(callback: types.CallbackQuery, state: FSMContext):
