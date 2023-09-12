@@ -65,8 +65,8 @@ async def get_weather(message: types.Message, state: FSMContext):
     current_date_time = datetime.datetime.now()
     formatted_date_time = current_date_time.strftime('%d/%m/%Y %H:%M:%S')
 
-    city_name = await user_location(message=message)
-    all_data = await location_weather(city_name=city_name)
+    city_name = await user_location(message)
+    all_data = await location_weather(city_name)
 
 
 

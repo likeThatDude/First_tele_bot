@@ -54,8 +54,8 @@ async def user_choice(message: types.Message, state: FSMContext):
         Переводит конечный автомат в следующее состояние для ожидания ответа по количеству ресторанов.
         Если город не найден, уведомляет пользователя об ошибке поиска и предлагает попробовать снова или вернуться в главное меню.
     """
-    city_name = await user_location(message) # Получение название города
-    city_id = await get_city_id(city_name) # Получение id города в сервисе Worldwide Restaurants
+    city_name = await user_location(message)  # Получение название города
+    city_id = await get_city_id(city_name)  # Получение id города в сервисе Worldwide Restaurants
     if city_id is not False:
         async with state.proxy() as data:
             data['city_name'] = city_name
@@ -67,7 +67,6 @@ async def user_choice(message: types.Message, state: FSMContext):
         await bot.send_message(message.from_user.id, f'Ошибка поиска города.'
                                                      f'\nПопробуйте ввести заново или'
                                                      f'\nвведите << отмена >> для возврата в главное меню.')
-
 
 
 async def get_rest_count(callback: types.CallbackQuery, state: FSMContext):
@@ -100,17 +99,18 @@ async def get_rest_count(callback: types.CallbackQuery, state: FSMContext):
             for restaurant in data['restaurants']:
                 try:
                     await bot.send_photo(callback.message.chat.id, restaurant['photo']['images']['original']['url'])
-                    await callback.message.answer(f'Название: {restaurant["name"]}'
-                                                  f'\nПозиция в рейтинге: {restaurant["ranking_position"]}'
-                                                  f'\nРейтинг: {restaurant["rating"]}'
-                                                  f'\nСейчас: {restaurant["open_now_text"]}\n'
+                    await callback.message.answer(f'Название: {restaurant["name"] if "name" in restaurant else "-"}'
+                                                  f'\nПозиция в рейтинге: {restaurant["ranking_position"] if "ranking_position" in restaurant else "-"}'
+                                                  f'\nРейтинг: {restaurant["rating"] if "rating" in restaurant else "-"}'
+                                                  f'\nСейчас: {restaurant["open_now_text"] if "open_now_text" in restaurant else "-"}\n'
                                                   f'\nКонтакты:'
-                                                  f'\nТелефон: {restaurant["phone"]}'
-                                                  f'\nemail: {restaurant["email"]}'
-                                                  f'\nадрес: {restaurant["address"]}'
+                                                  f'\nТелефон: {restaurant["phone"] if "phone" in restaurant else "-"}'
+                                                  f'\nemail: {restaurant["email"] if "email" in restaurant else "-"}'
+                                                  f'\nадрес: {restaurant["address"] if "address" in restaurant else "-"}'
                                                   f'\nДля более подробной информации'
                                                   f'\nпройдите по ссылке:'
-                                                  f'\n{restaurant["web_url"]}', disable_web_page_preview=True)
+                                                  f'\n{restaurant["web_url"] if "web_url" in restaurant else "-"}',
+                                                  disable_web_page_preview=True)
                 except KeyError:
                     continue
                 await asyncio.sleep(1.0)
