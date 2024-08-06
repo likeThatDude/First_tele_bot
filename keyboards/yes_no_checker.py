@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 async def yes_no_checker():
@@ -14,6 +14,10 @@ async def yes_no_checker():
         InlineKeyboardMarkup: Объект инлайн-клавиатуры с кнопками "Ввести даты заново" и "Продолжить".
     """
     yes_no_keyboard = InlineKeyboardMarkup(row_width=1)
-    yes_no_keyboard.add(InlineKeyboardButton(text='Ввести даты заново', callback_data='//да'))
-    yes_no_keyboard.add(InlineKeyboardButton(text='Продолжить', callback_data='//нет'))
+    yes_no_keyboard.add(
+        InlineKeyboardButton(text="Ввести даты заново", callback_data="//да")
+    )
+    yes_no_keyboard.add(
+        InlineKeyboardButton(text="Продолжить", callback_data="//нет")
+    )
     return yes_no_keyboard

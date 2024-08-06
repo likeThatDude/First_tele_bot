@@ -1,7 +1,1 @@
-from handlers import hotels
-from handlers import weather
-from handlers import restaurants
-from handlers import start
-from handlers import search_history
-from handlers import help
-
+from handlers import help, hotels, restaurants, search_history, start, weather

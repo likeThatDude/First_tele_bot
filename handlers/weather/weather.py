@@ -1,14 +1,16 @@
-import json
 import datetime
-from create_bot import bot
-from aiogram import types, Dispatcher
+import json
+
+from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
+
+from create_bot import bot
+from data_base.sqlite_db import add_request
 from keyboards.location_button import location_button
 from keyboards.start_keyboard import start_button
 from utilities.find_location.find_city import user_location
 from utilities.weather.get_weather import location_weather
-from data_base.sqlite_db import add_request
 
 
 class FSMWeather(StatesGroup):
@@ -32,12 +34,15 @@ async def get_city(message: types.Message):
         Задает состояние FSMWeather.correct_cite_name для следующего шага конечного автомата.
     """
     location_keyboard = await location_button()
-    await bot.send_message(message.from_user.id, '\t\t⛅️    Меню погоды    ⛅️\n'
-                                                 '\nДля начала мне нужно знать город,'
-                                                 '\nв котором вам нужно узнать погоду.'
-                                                 '\nВведите город или поделитесь геолокацией со мной.'
-                                                 '\nЧтобы поделиться, нажмите кнопку снизу.',
-                           reply_markup=location_keyboard)
+    await bot.send_message(
+        message.from_user.id,
+        "\t\t⛅️    Меню погоды    ⛅️\n"
+        "\nДля начала мне нужно знать город,"
+        "\nв котором вам нужно узнать погоду."
+        "\nВведите город или поделитесь геолокацией со мной."
+        "\nЧтобы поделиться, нажмите кнопку снизу.",
+        reply_markup=location_keyboard,
+    )
     await FSMWeather.correct_cite_name.set()
 
 
@@ -63,31 +68,42 @@ async def get_weather(message: types.Message, state: FSMContext):
     """
 
     current_date_time = datetime.datetime.now()
-    formatted_date_time = current_date_time.strftime('%d/%m/%Y %H:%M:%S')
+    formatted_date_time = current_date_time.strftime("%d/%m/%Y %H:%M:%S")
 
     city_name = await user_location(message)
     all_data = await location_weather(city_name)
 
-
-
     if all_data.status_code == 200:
-        await add_request((message.from_user.id,
-                           'Проверка погоды',
-                           f'Город: {city_name.capitalize()}.'))
+        await add_request(
+            (
+                message.from_user.id,
+                "Проверка погоды",
+                f"Город: {city_name.capitalize()}.",
+            )
+        )
         data = json.loads(all_data.text)
         start_keyboard = await start_button()
-        await bot.send_message(message.from_user.id, f'Погода в городе: {city_name.capitalize()}\n'
-                                                     f'\nДанные на: {formatted_date_time}\n'
-                                                     f'\nТемпература: {round(data["main"]["temp"], 1)} °C'
-                                                     f'\nОщущается как: {round(data["main"]["feels_like"], 1)} °C'
-                                                     f'\nСейчас на улице: '
-                                                     f'{data["weather"][0]["description"].capitalize()}'
-                                                     f'\nВлажность: {round(data["main"]["humidity"], 1)}%')
+        await bot.send_message(
+            message.from_user.id,
+            f"Погода в городе: {city_name.capitalize()}\n"
+            f"\nДанные на: {formatted_date_time}\n"
+            f'\nТемпература: {round(data["main"]["temp"], 1)} °C'
+            f'\nОщущается как: {round(data["main"]["feels_like"], 1)} °C'
+            f"\nСейчас на улице: "
+            f'{data["weather"][0]["description"].capitalize()}'
+            f'\nВлажность: {round(data["main"]["humidity"], 1)}%',
+        )
         await state.finish()
-        await bot.send_message(message.from_user.id, 'Для продолжения работы выберите один из пунктов меню:',
-                               reply_markup=start_keyboard)
+        await bot.send_message(
+            message.from_user.id,
+            "Для продолжения работы выберите один из пунктов меню:",
+            reply_markup=start_keyboard,
+        )
     else:
-        await bot.send_message(message.from_user.id, 'Ошибка ввода города. Пожалуйста, попробуйте еще раз.')
+        await bot.send_message(
+            message.from_user.id,
+            "Ошибка ввода города. Пожалуйста, попробуйте еще раз.",
+        )
 
 
 def register_handler_weather(dp: Dispatcher):
@@ -104,5 +120,9 @@ def register_handler_weather(dp: Dispatcher):
         get_weather будет вызываться при получении текстовых сообщений или местоположения,
         когда пользователь находится в состоянии FSMWeather.correct_cite_name.
     """
-    dp.register_message_handler(get_city, commands=['Погода'], state=None)
-    dp.register_message_handler(get_weather, content_types=['text', 'location'], state=FSMWeather.correct_cite_name)
+    dp.register_message_handler(get_city, commands=["Погода"], state=None)
+    dp.register_message_handler(
+        get_weather,
+        content_types=["text", "location"],
+        state=FSMWeather.correct_cite_name,
+    )

@@ -1,5 +1,7 @@
 import aiohttp
+
 from create_bot import rest_key
+
 
 async def get_rest_list(location_id):
     """
@@ -19,19 +21,21 @@ async def get_rest_list(location_id):
         "language": "ru_RU",
         "location_id": location_id,
         "currency": "USD",
-        "offset": "0"
+        "offset": "0",
     }
     headers = {
         "content-type": "application/x-www-form-urlencoded",
         "X-RapidAPI-Key": rest_key,
-        "X-RapidAPI-Host": "worldwide-restaurants.p.rapidapi.com"
+        "X-RapidAPI-Host": "worldwide-restaurants.p.rapidapi.com",
     }
 
     async with aiohttp.ClientSession() as session:
-        async with session.post(url, data=payload, headers=headers) as response:
+        async with session.post(
+            url, data=payload, headers=headers
+        ) as response:
             if response.status == 200:
                 response = await response.json()
-                result_list = response['results']['data']
+                result_list = response["results"]["data"]
                 return result_list
             else:
                 return False

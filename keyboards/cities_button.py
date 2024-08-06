@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 async def cities_button_generator(dict_with_result):
@@ -41,5 +41,10 @@ async def cities_button_generator(dict_with_result):
     cities_keyboard = InlineKeyboardMarkup(row_width=1)
     for city, city_data in dict_with_result.items():
         truncated_city_name = city[:33]
-        cities_keyboard.add(InlineKeyboardButton(text=city_data["label"], callback_data=f'//{truncated_city_name}'))
+        cities_keyboard.add(
+            InlineKeyboardButton(
+                text=city_data["label"],
+                callback_data=f"//{truncated_city_name}",
+            )
+        )
     return cities_keyboard

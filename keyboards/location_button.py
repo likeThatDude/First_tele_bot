@@ -1,4 +1,5 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
+
 
 async def location_button():
     """
@@ -11,7 +12,9 @@ async def location_button():
     Возвращает:
         ReplyKeyboardMarkup: Объект клавиатуры с единственной кнопкой запроса геопозиции.
     """
-    button_one = KeyboardButton('Поделиться геопозицией 🗺️', request_location=True)
+    button_one = KeyboardButton(
+        "Поделиться геопозицией 🗺️", request_location=True
+    )
     location_keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
     location_keyboard.add(button_one)
     return location_keyboard

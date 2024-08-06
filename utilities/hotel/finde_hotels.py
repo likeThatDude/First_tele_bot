@@ -1,8 +1,17 @@
-from create_bot import hotel_key
 import aiohttp
 
+from create_bot import hotel_key
 
-async def create_hotels_dict(city_id, checkin_date, checkout_date, rating, hotels_count, order_by, adults_number=1):
+
+async def create_hotels_dict(
+    city_id,
+    checkin_date,
+    checkout_date,
+    rating,
+    hotels_count,
+    order_by,
+    adults_number=1,
+):
     """
     Создает словарь отелей с их оценками в указанном городе.
 
@@ -49,23 +58,28 @@ async def create_hotels_dict(city_id, checkin_date, checkout_date, rating, hotel
             "children_ages": "5,0",
             "categories_filter_ids": "class::2,class::4,free_cancellation::1",
             "page_number": page_number,
-            "include_adjacency": "true"
+            "include_adjacency": "true",
         }
 
         url = "https://booking-com.p.rapidapi.com/v1/hotels/search"
 
         headers = {
             "X-RapidAPI-Key": hotel_key,
-            "X-RapidAPI-Host": "booking-com.p.rapidapi.com"
+            "X-RapidAPI-Host": "booking-com.p.rapidapi.com",
         }
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=headers, params=querystring) as response:
+            async with session.get(
+                url, headers=headers, params=querystring
+            ) as response:
                 response_data = await response.json()
                 if "result" in response_data:
                     for hotel_data in response_data["result"]:
-                        if not hotel_data['review_score'] is None and isinstance(hotel_data['review_score'],
-                                                                                 (float, int)):
+                        if not hotel_data[
+                            "review_score"
+                        ] is None and isinstance(
+                            hotel_data["review_score"], (float, int)
+                        ):
                             hotels_with_rating.append(hotel_data)
                             if len(hotels_with_rating) == hotels_count:
                                 break
@@ -74,4 +88,6 @@ async def create_hotels_dict(city_id, checkin_date, checkout_date, rating, hotel
                         continue
                     break
 
-    return sorted(hotels_with_rating, key=lambda x: x['review_score'], reverse=rating)
+    return sorted(
+        hotels_with_rating, key=lambda x: x["review_score"], reverse=rating
+    )

@@ -1,4 +1,5 @@
 from geopy import Nominatim
+
 from create_bot import bot
 
 
@@ -22,13 +23,18 @@ async def user_location(message):
 
        Если название города не определено и сообщение не содержит текстового ввода,
        возвращает None, чтобы обработка названия города выполнялась в вызывающей функции.
-       """
+    """
     if message.location:
-        city_name = await get_city_name(message['location']['latitude'], message['location']['longitude'])
+        city_name = await get_city_name(
+            message["location"]["latitude"], message["location"]["longitude"]
+        )
         if city_name is None:
-            await bot.send_message(message.from_user.id, 'Извините, я не смог найти ваш город.'
-                                                         '\nПопробуйте прислать геолокацию ещё раз '
-                                                         '\nили напишите город вручную')
+            await bot.send_message(
+                message.from_user.id,
+                "Извините, я не смог найти ваш город."
+                "\nПопробуйте прислать геолокацию ещё раз "
+                "\nили напишите город вручную",
+            )
     else:
         city_name = message.text.strip().lower()
     return city_name

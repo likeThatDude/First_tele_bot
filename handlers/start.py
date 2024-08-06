@@ -1,9 +1,11 @@
-from create_bot import bot
 from datetime import datetime
-from aiogram import types, Dispatcher
-from data_base.sqlite_db import add_user
+
+from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
+
+from create_bot import bot
+from data_base.sqlite_db import add_user
 from keyboards.start_keyboard import start_button
 
 
@@ -40,12 +42,15 @@ async def start_command(message: types.Message):
         time_period = "Доброй ночь"
 
     start_keyboard = await start_button()
-    await bot.send_message(message.from_user.id, f'{time_period}, {message.from_user.first_name} !\n'
-                                                 f'\nЯ бот помощник, у меня есть следующие функции: '
-                                                 f'\n1) Поиск отелей. 🏨'
-                                                 f'\n2) Поиск ресторанов, кафе.🍜'
-                                                 f'\n3) Могу узнать погоду в интересующем вас городе.🌦',
-                           reply_markup=start_keyboard)
+    await bot.send_message(
+        message.from_user.id,
+        f"{time_period}, {message.from_user.first_name} !\n"
+        f"\nЯ бот помощник, у меня есть следующие функции: "
+        f"\n1) Поиск отелей. 🏨"
+        f"\n2) Поиск ресторанов, кафе.🍜"
+        f"\n3) Могу узнать погоду в интересующем вас городе.🌦",
+        reply_markup=start_keyboard,
+    )
 
 
 async def cancel(message: types.Message, state: FSMContext):
@@ -65,10 +70,17 @@ async def cancel(message: types.Message, state: FSMContext):
     back_button = await start_button()
     current_state = await state.get_state()
     if current_state is None:
-        await bot.send_message(message.from_user.id, 'Вы уже в главном меню.'
-                                                     '\nПросто вызовите клавиатуру около поля ввода текста')
+        await bot.send_message(
+            message.from_user.id,
+            "Вы уже в главном меню."
+            "\nПросто вызовите клавиатуру около поля ввода текста",
+        )
     else:
-        await bot.send_message(message.from_user.id, 'Возврат в главное меню', reply_markup=back_button)
+        await bot.send_message(
+            message.from_user.id,
+            "Возврат в главное меню",
+            reply_markup=back_button,
+        )
         await state.finish()
 
 
@@ -89,5 +101,7 @@ def register_handler_start(dp: Dispatcher):
         Регистрация обработчика команды "/start" в диспетчере для дальнейшей обработки данной команды от пользователя.
 
     """
-    dp.register_message_handler(start_command, commands=['start'])
-    dp.register_message_handler(cancel, Text(equals='отмена', ignore_case=True), state='*')
+    dp.register_message_handler(start_command, commands=["start"])
+    dp.register_message_handler(
+        cancel, Text(equals="отмена", ignore_case=True), state="*"
+    )

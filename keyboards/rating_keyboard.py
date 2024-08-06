@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 async def rating_button():
@@ -13,6 +13,10 @@ async def rating_button():
         InlineKeyboardMarkup: Объект инлайн-клавиатуры с кнопками для выбора сортировки по рейтингу.
     """
     rating_key = InlineKeyboardMarkup(row_width=1)
-    rating_key.add(InlineKeyboardButton(text='С высокого', callback_data='//больше'))
-    rating_key.add(InlineKeyboardButton(text='С низкого', callback_data='//меньше'))
+    rating_key.add(
+        InlineKeyboardButton(text="С высокого", callback_data="//больше")
+    )
+    rating_key.add(
+        InlineKeyboardButton(text="С низкого", callback_data="//меньше")
+    )
     return rating_key

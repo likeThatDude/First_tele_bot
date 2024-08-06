@@ -1,4 +1,5 @@
 import requests
+
 from create_bot import weather_key
 
 
@@ -19,6 +20,7 @@ async def location_weather(city_name):
     """
 
     weather_data = requests.get(
-        f'https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={weather_key}&units=metric&lang=ru')
+        f"https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={weather_key}&units=metric&lang=ru"
+    )
 
     return weather_data

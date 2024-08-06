@@ -1,16 +1,18 @@
 import asyncio
-from create_bot import bot
-from aiogram import types, Dispatcher
+
+from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
+
+from create_bot import bot
+from data_base.sqlite_db import add_request
 from keyboards.count_keyboard import get_count
-from keyboards.start_keyboard import start_button
 from keyboards.location_button import location_button
+from keyboards.start_keyboard import start_button
+from utilities.find_location.find_city import user_location
 from utilities.restaurants.get_city_id import get_city_id
 from utilities.restaurants.get_rest_list import get_rest_list
-from utilities.find_location.find_city import user_location
-from data_base.sqlite_db import add_request
 
 
 class FSMRest(StatesGroup):
@@ -33,9 +35,11 @@ async def rest_start(message: types.Message):
         Задает состояние FSMRest.city для следующего шага конечного автомата.
     """
     keyboard = await location_button()
-    await bot.send_message(message.from_user.id,
-                           'Введите город, или отправьте свою геолокацию, для поиска лучших ресторанов в городе.',
-                           reply_markup=keyboard)
+    await bot.send_message(
+        message.from_user.id,
+        "Введите город, или отправьте свою геолокацию, для поиска лучших ресторанов в городе.",
+        reply_markup=keyboard,
+    )
     await FSMRest.city.set()
 
 
@@ -55,18 +59,27 @@ async def user_choice(message: types.Message, state: FSMContext):
         Если город не найден, уведомляет пользователя об ошибке поиска и предлагает попробовать снова или вернуться в главное меню.
     """
     city_name = await user_location(message)  # Получение название города
-    city_id = await get_city_id(city_name)  # Получение id города в сервисе Worldwide Restaurants
+    city_id = await get_city_id(
+        city_name
+    )  # Получение id города в сервисе Worldwide Restaurants
     if city_id is not False:
         async with state.proxy() as data:
-            data['city_name'] = city_name
-            data['city_id'] = city_id
+            data["city_name"] = city_name
+            data["city_id"] = city_id
         keyboard = await get_count()
-        await bot.send_message(message.from_user.id, f'Какое количество ресторанов найти ?', reply_markup=keyboard)
+        await bot.send_message(
+            message.from_user.id,
+            f"Какое количество ресторанов найти ?",
+            reply_markup=keyboard,
+        )
         await FSMRest.next()
     else:
-        await bot.send_message(message.from_user.id, f'Ошибка поиска города.'
-                                                     f'\nПопробуйте ввести заново или'
-                                                     f'\nвведите << отмена >> для возврата в главное меню.')
+        await bot.send_message(
+            message.from_user.id,
+            f"Ошибка поиска города."
+            f"\nПопробуйте ввести заново или"
+            f"\nвведите << отмена >> для возврата в главное меню.",
+        )
 
 
 async def get_rest_count(callback: types.CallbackQuery, state: FSMContext):
@@ -89,35 +102,52 @@ async def get_rest_count(callback: types.CallbackQuery, state: FSMContext):
     rest_count = int(callback.data[2:])
     start_keyboard = await start_button()
     async with state.proxy() as data:
-        await add_request((callback.message.chat.id,
-                           'Поиск ресторанов',
-                           f'Город: {data["city_name"].capitalize()}.'))
-        list_with_restaurants = await get_rest_list(data['city_id'])
+        await add_request(
+            (
+                callback.message.chat.id,
+                "Поиск ресторанов",
+                f'Город: {data["city_name"].capitalize()}.',
+            )
+        )
+        list_with_restaurants = await get_rest_list(data["city_id"])
         if list_with_restaurants is not False:
-            data['restaurants'] = list_with_restaurants[:rest_count]
-            await callback.message.answer(f'Вот лучшие рестораны в городе: {data["city_name"]}')
-            for restaurant in data['restaurants']:
+            data["restaurants"] = list_with_restaurants[:rest_count]
+            await callback.message.answer(
+                f'Вот лучшие рестораны в городе: {data["city_name"]}'
+            )
+            for restaurant in data["restaurants"]:
                 try:
-                    await bot.send_photo(callback.message.chat.id, restaurant['photo']['images']['original']['url'])
-                    await callback.message.answer(f'Название: {restaurant["name"] if "name" in restaurant else "-"}'
-                                                  f'\nПозиция в рейтинге: {restaurant["ranking_position"] if "ranking_position" in restaurant else "-"}'
-                                                  f'\nРейтинг: {restaurant["rating"] if "rating" in restaurant else "-"}'
-                                                  f'\nСейчас: {restaurant["open_now_text"] if "open_now_text" in restaurant else "-"}\n'
-                                                  f'\nКонтакты:'
-                                                  f'\nТелефон: {restaurant["phone"] if "phone" in restaurant else "-"}'
-                                                  f'\nemail: {restaurant["email"] if "email" in restaurant else "-"}'
-                                                  f'\nадрес: {restaurant["address"] if "address" in restaurant else "-"}'
-                                                  f'\nДля более подробной информации'
-                                                  f'\nпройдите по ссылке:'
-                                                  f'\n{restaurant["web_url"] if "web_url" in restaurant else "-"}',
-                                                  disable_web_page_preview=True)
+                    await bot.send_photo(
+                        callback.message.chat.id,
+                        restaurant["photo"]["images"]["original"]["url"],
+                    )
+                    await callback.message.answer(
+                        f'Название: {restaurant["name"] if "name" in restaurant else "-"}'
+                        f'\nПозиция в рейтинге: {restaurant["ranking_position"] if "ranking_position" in restaurant else "-"}'
+                        f'\nРейтинг: {restaurant["rating"] if "rating" in restaurant else "-"}'
+                        f'\nСейчас: {restaurant["open_now_text"] if "open_now_text" in restaurant else "-"}\n'
+                        f"\nКонтакты:"
+                        f'\nТелефон: {restaurant["phone"] if "phone" in restaurant else "-"}'
+                        f'\nemail: {restaurant["email"] if "email" in restaurant else "-"}'
+                        f'\nадрес: {restaurant["address"] if "address" in restaurant else "-"}'
+                        f"\nДля более подробной информации"
+                        f"\nпройдите по ссылке:"
+                        f'\n{restaurant["web_url"] if "web_url" in restaurant else "-"}',
+                        disable_web_page_preview=True,
+                    )
                 except KeyError:
                     continue
                 await asyncio.sleep(1.0)
-            await callback.message.answer(f'Для продолжения выберете один из вариантов:', reply_markup=start_keyboard)
+            await callback.message.answer(
+                f"Для продолжения выберете один из вариантов:",
+                reply_markup=start_keyboard,
+            )
         else:
-            await callback.message.answer(f'Извините, произошла ошибка поиска ресторанов,'
-                                          f'\nвозврат в главное меню.', reply_markup=start_keyboard)
+            await callback.message.answer(
+                f"Извините, произошла ошибка поиска ресторанов,"
+                f"\nвозврат в главное меню.",
+                reply_markup=start_keyboard,
+            )
     await state.finish()
 
 
@@ -133,7 +163,11 @@ async def cancel(message: types.Message, state: FSMContext):
         Отправляет сообщение о возврате в главное меню и завершает текущее состояние конечного автомата.
     """
     back_button = await start_button()
-    await bot.send_message(message.from_user.id, 'Возврат в главное меню', reply_markup=back_button)
+    await bot.send_message(
+        message.from_user.id,
+        "Возврат в главное меню",
+        reply_markup=back_button,
+    )
     await state.finish()
 
 
@@ -152,7 +186,13 @@ def register_handler_hotels(dp: Dispatcher):
             с префиксом "//" и в состоянии FSMRest.rest_count.
         Регистрирует обработчик текстового сообщения "отмена" для функции cancel в любом состоянии.
     """
-    dp.register_message_handler(rest_start, commands=['Рестораны'])
-    dp.register_message_handler(user_choice, content_types=['text', 'location'], state=FSMRest.city)
-    dp.register_callback_query_handler(get_rest_count, Text(startswith='//'), state=FSMRest.rest_count)
-    dp.register_message_handler(cancel, Text(equals='отмена', ignore_case=True), state='*')
+    dp.register_message_handler(rest_start, commands=["Рестораны"])
+    dp.register_message_handler(
+        user_choice, content_types=["text", "location"], state=FSMRest.city
+    )
+    dp.register_callback_query_handler(
+        get_rest_count, Text(startswith="//"), state=FSMRest.rest_count
+    )
+    dp.register_message_handler(
+        cancel, Text(equals="отмена", ignore_case=True), state="*"
+    )
